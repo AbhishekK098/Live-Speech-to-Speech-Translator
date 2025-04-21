@@ -80,8 +80,6 @@ def save_audio(audio):
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
     scipy.io.wavfile.write(tmp.name, SAMPLERATE, audio)
     return tmp.name
-
-
 def transcribe_and_detect(path):
     segments, info = model.transcribe(path, beam_size=5)
     text = " ".join([segment.text for segment in segments])
@@ -89,9 +87,6 @@ def transcribe_and_detect(path):
     if not text or not detected_lang:
         raise ValueError("Transcription or language detection failed")
     return text, detected_lang
-
-
-
 def translate_text(text, dest_lang):
     translated = translator.translate(text, dest=dest_lang).text
     if not translated:
@@ -103,8 +98,6 @@ async def speak_text(text, voice_code):
         raise ValueError("No text to speak")
     communicate = edge_tts.Communicate(text, voice=voice_code)
     await communicate.play()
-
-
 def save_transcript(original_text, detected_lang, translations):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(LOG_FILE, "a", encoding="utf-8") as f:
@@ -113,8 +106,6 @@ def save_transcript(original_text, detected_lang, translations):
         for name, translated, _ in translations:
             f.write(f"{name}: {translated}\n")
         f.write("\n----------------------------\n\n")
-
-
 def listen_loop():
     global is_listening
     is_listening = True
@@ -157,8 +148,6 @@ def listen_loop():
             transcription_label.config(text=f"Error: {str(e)}")
         finally:
             os.remove(path)
-
-
 def start_listening():
     threading.Thread(target=listen_loop, daemon=True).start()
 
@@ -178,13 +167,10 @@ lang_menu.config(font=("Arial", 11))
 lang_menu.pack(pady=5)
 
 tk.Button(window, text="Start Listening", command=start_listening, bg="lightgreen", font=("Arial", 12)).pack(pady=10)
-
 status_label = tk.Label(window, text="Click to start", font=("Arial", 12))
 status_label.pack(pady=5)
-
 transcription_label = tk.Label(window, text="👂 Transcription will appear here", wraplength=500, font=("Arial", 11))
 transcription_label.pack(pady=10)
-
 translation_label = tk.Label(window, text="🗣️ Translations will appear here", wraplength=500, font=("Arial", 11), justify="left")
 translation_label.pack(pady=10)
 
