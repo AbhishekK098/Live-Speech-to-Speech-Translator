@@ -8,3 +8,7 @@ torch
 deep-translator
 langdetect
 tk
+speechrecognition
+googletrans
+gTTS or pyttsx3
+pyaudio
