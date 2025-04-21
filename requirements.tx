@@ -1,0 +1,10 @@
+sounddevice
+numpy
+edge-tts
+googletrans==4.0.0-rc1
+scipy
+faster-whisper
+torch
+deep-translator
+langdetect
+tk
