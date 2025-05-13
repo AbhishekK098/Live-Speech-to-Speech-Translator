@@ -155,6 +155,7 @@ def start_listening():
 window = tk.Tk()
 window.title("Speech-to-Speech Translation APP")
 window.geometry("520x480")
+window.configure(bg="#87CEEB")
 
 tk.Label(window, text="🎧 Speech-to-Speech Translation", font=("Arial", 13, "bold")).pack(pady=5)
 
