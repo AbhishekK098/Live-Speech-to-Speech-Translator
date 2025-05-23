@@ -172,6 +172,10 @@ def listen_loop():
             os.remove(path)
 def start_listening():
     threading.Thread(target=listen_loop, daemon=True).start()
+def stop_listening():
+    global is_listening
+    is_listening = False
+    status_label.config(text="🛑 Stopped by user.")
 
 # tkinter GUI setup for app window
 window = tk.Tk()
@@ -181,27 +185,38 @@ window.configure(bg="#87CEEB")
 
 tk.Label(window, text="🎧 Speech-to-Speech Translation", font=("Arial", 13, "bold")).pack(pady=5)
 
-# dropdown for language selection
-selected_lang = tk.StringVar(window)
-selected_lang.set("English (UK)") 
-lang_options = [name for name, code, voice in MULTI_LANGS]
-lang_menu = tk.OptionMenu(window, selected_lang, *lang_options)
-lang_menu.config(font=("Arial", 11))
-lang_menu.pack(pady=5)
-#add button to start listening
+# frame to hold listbox and scrollbar
+frame_lang = tk.Frame(window)
+frame_lang.pack(pady=5, fill=tk.X, padx=20)
+
+scrollbar = tk.Scrollbar(frame_lang)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+lang_listbox = tk.Listbox(frame_lang, yscrollcommand=scrollbar.set, height=8, font=("Arial", 11), exportselection=False)
+for name, code, voice in MULTI_LANGS:
+    lang_listbox.insert(tk.END, name)
+lang_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+scrollbar.config(command=lang_listbox.yview)
+
+# Select default language "English (UK)"
+default_index = next((i for i, (name, _, _) in enumerate(MULTI_LANGS) if name == "English (UK)"), 0)
+lang_listbox.selection_set(default_index)
+lang_listbox.activate(default_index)
+lang_listbox.see(default_index)
+
 tk.Button(window, text="Start Listening", command=start_listening, bg="lightgreen", font=("Arial", 12)).pack(pady=10)
+tk.Button(window, text="Stop Listening", command=stop_listening, bg="salmon", font=("Arial", 12)).pack(pady=5)
+
 status_label = tk.Label(window, text="Click to start", font=("Arial", 12))
 status_label.pack(pady=5)
+
 transcription_label = tk.Label(window, text="👂 Transcription will appear here", wraplength=500, font=("Arial", 11))
 transcription_label.pack(pady=10)
+
 translation_label = tk.Label(window, text="🗣️ Translations will appear here", wraplength=500, font=("Arial", 11), justify="left")
 translation_label.pack(pady=10)
 
-tk.Button(window, text="Quit", command=window.destroy, bg="salmon", font=("Arial", 12)).pack(pady=20)
-#add button tostop listening 
-def stop_listening():
-    global is_listening
-    is_listening = False
-    status_label.config(text="🛑 Stopped by user.")
+tk.Button(window, text="Quit", command=window.destroy, bg="gray", font=("Arial", 12)).pack(pady=20)
 
 window.mainloop()
