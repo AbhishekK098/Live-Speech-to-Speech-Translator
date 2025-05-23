@@ -87,17 +87,36 @@ def transcribe_and_detect(path):
     if not text or not detected_lang:
         raise ValueError("Transcription or language detection failed")
     return text, detected_lang
-def translate_text(text, dest_lang):
+'''def translate_text(text, dest_lang):
     translated = translator.translate(text, dest=dest_lang).text
     if not translated:
         raise ValueError("Translation failed")
-    return translated
+    return translated'''
+#updated for exception handling
+def translate_text(text, dest_lang):
+    try:
+        translated = translator.translate(text, dest=dest_lang).text
+        if not translated:
+            raise ValueError("Empty translation received")
+        return translated
+    except Exception as e:
+        print(f"Translation error: {e}")
+        return "⚠️ Translation failed due to network or API issue."
 
-async def speak_text(text, voice_code):
+'''async def speak_text(text, voice_code):
     if not text:
         raise ValueError("No text to speak")
     communicate = edge_tts.Communicate(text, voice=voice_code)
-    await communicate.play()
+    await communicate.play()'''
+#updated for exception handling
+async def speak_text(text, voice_code):
+    if not text:
+        raise ValueError("No text to speak")
+    try:
+        communicate = edge_tts.Communicate(text, voice=voice_code)
+        await communicate.play()
+    except Exception as e:
+        print(f"TTS error: {e}")
 def save_transcript(original_text, detected_lang, translations):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(LOG_FILE, "a", encoding="utf-8") as f:
