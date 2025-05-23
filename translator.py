@@ -12,7 +12,7 @@ import scipy.io.wavfile
 from faster_whisper import WhisperModel
 import torch
 
-# Load the Whisper Model
+# load the whisper model
 model = WhisperModel("base", compute_type="int8")
 translator = Translator()
 
@@ -20,7 +20,7 @@ RECORD_SECONDS = 5
 SAMPLERATE = 16000
 is_listening = False
 LOG_FILE = "transcripts.txt"
-
+#add languages want to translate
 MULTI_LANGS = [
     ("Arabic", "ar", "ar-SA-ZariyahNeural"),
     ("Bengali", "bn", "bn-IN-TanishaaNeural"),
@@ -151,7 +151,7 @@ def listen_loop():
 def start_listening():
     threading.Thread(target=listen_loop, daemon=True).start()
 
-# Tkinter GUI setup
+# tkinter GUI setup for app window
 window = tk.Tk()
 window.title("Speech-to-Speech Translation APP")
 window.geometry("520x480")
@@ -159,14 +159,14 @@ window.configure(bg="#87CEEB")
 
 tk.Label(window, text="🎧 Speech-to-Speech Translation", font=("Arial", 13, "bold")).pack(pady=5)
 
-# Dropdown for language selection
+# dropdown for language selection
 selected_lang = tk.StringVar(window)
-selected_lang.set("Telugu")  # default selection
+selected_lang.set("English (UK)") 
 lang_options = [name for name, code, voice in MULTI_LANGS]
 lang_menu = tk.OptionMenu(window, selected_lang, *lang_options)
 lang_menu.config(font=("Arial", 11))
 lang_menu.pack(pady=5)
-
+#add button to start listening
 tk.Button(window, text="Start Listening", command=start_listening, bg="lightgreen", font=("Arial", 12)).pack(pady=10)
 status_label = tk.Label(window, text="Click to start", font=("Arial", 12))
 status_label.pack(pady=5)
@@ -176,5 +176,10 @@ translation_label = tk.Label(window, text="🗣️ Translations will appear here
 translation_label.pack(pady=10)
 
 tk.Button(window, text="Quit", command=window.destroy, bg="salmon", font=("Arial", 12)).pack(pady=20)
+#add button tostop listening 
+def stop_listening():
+    global is_listening
+    is_listening = False
+    status_label.config(text="🛑 Stopped by user.")
 
 window.mainloop()
