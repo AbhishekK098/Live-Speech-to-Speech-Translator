@@ -87,21 +87,20 @@ def transcribe_and_detect(path):
     if not text or not detected_lang:
         raise ValueError("Transcription or language detection failed")
     return text, detected_lang
-'''def translate_text(text, dest_lang):
-    translated = translator.translate(text, dest=dest_lang).text
-    if not translated:
-        raise ValueError("Translation failed")
-    return translated'''
+
 #updated for exception handling
-def translate_text(text, dest_lang):
+async def speak_text(text, voice_code):
+    if not text:
+        raise ValueError("No text to speak")
     try:
-        translated = translator.translate(text, dest=dest_lang).text
-        if not translated:
-            raise ValueError("Empty translation received")
-        return translated
+        communicate = edge_tts.Communicate(text, voice=voice_code)
+        output_path = f"translated_output_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mp3"
+        await communicate.save(output_path)  # Save as MP3
+        await communicate.play()             # Play the audio
+        print(f"🔊 Saved translated audio to {output_path}")
     except Exception as e:
-        print(f"Translation error: {e}")
-        return "⚠️ Translation failed due to network or API issue."
+        print(f"TTS error: {e}")
+
 
 '''async def speak_text(text, voice_code):
     if not text:
