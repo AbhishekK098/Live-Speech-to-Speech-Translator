@@ -56,7 +56,7 @@ def translate_text(text, dest_lang):
         return translated
     except Exception as e:
         print(f"Translation error: {e}")
-        return "⚠️ Translation failed due to network or API issue."
+        return " Translation failed due to network or API issue."
 #updated for exception handling
 '''async def speak_text(text, voice_code):
     if not text:
@@ -97,10 +97,10 @@ def listen_loop():
             if not text or not detected_lang:
                 transcription_label.config(text="Error: No transcription or language detection.")
                 continue  # Skip the iteration if transcription failed
-            transcription_label.config(text=f"👂 You said ({detected_lang}): {text}")
+            transcription_label.config(text=f" You said ({detected_lang}): {text}")
             if "stop" in text.lower():
                 is_listening = False
-                status_label.config(text="🛑 Stopped.")
+                status_label.config(text=" Stopped.")
                 break
             user_choice = selected_lang.get()
             chosen = next((item for item in MULTI_LANGS if item[0] == user_choice), None)
@@ -108,14 +108,14 @@ def listen_loop():
                 name, lang_code, voice = chosen
                 translated = translate_text(text, lang_code)
                 if translated:
-                    translation_label.config(text=f"🗣️ {name}: {translated}")
+                    translation_label.config(text=f" {name}: {translated}")
                     # Call speak_text here to play the translated speech
                     asyncio.run(speak_text(translated, voice))
                     save_transcript(text, detected_lang, [(name, translated, voice)])
                 else:
-                    translation_label.config(text="⚠️ Translation failed.")
+                    translation_label.config(text=" Translation failed.")
             else:
-                translation_label.config(text="⚠️ Invalid Language Selected!")
+                translation_label.config(text=" Invalid Language Selected!")
         except Exception as e:
             transcription_label.config(text=f"Error: {str(e)}")
         finally:
@@ -125,13 +125,13 @@ def start_listening():
 def stop_listening():
     global is_listening
     is_listening = False
-    status_label.config(text="🛑 Stopped by user.")
+    status_label.config(text=" Stopped by user.")
 # tkinter GUI setup for app window
 window = tk.Tk()
 window.title("Speech-to-Speech Translation APP")
 window.geometry("520x480")
 window.configure(bg="#87CEEB")
-tk.Label(window, text="🎧 Speech-to-Speech Translation", font=("Arial", 13, "bold")).pack(pady=5)
+tk.Label(window, text=" Speech-to-Speech Translation", font=("Arial", 13, "bold")).pack(pady=5)
 # frame to hold listbox and scrollbar
 frame_lang = tk.Frame(window)
 frame_lang.pack(pady=5, fill=tk.X, padx=20)
@@ -151,9 +151,9 @@ tk.Button(window, text="Start Listening", command=start_listening, bg="lightgree
 tk.Button(window, text="Stop Listening", command=stop_listening, bg="salmon", font=("Arial", 12)).pack(pady=5)
 status_label = tk.Label(window, text="Click to start", font=("Arial", 12))
 status_label.pack(pady=5)
-transcription_label = tk.Label(window, text="👂 Transcription will appear here", wraplength=500, font=("Arial", 11))
+transcription_label = tk.Label(window, text=" Transcription will appear here", wraplength=500, font=("Arial", 11))
 transcription_label.pack(pady=10)
-translation_label = tk.Label(window, text="🗣️ Translations will appear here", wraplength=500, font=("Arial", 11), justify="left")
+translation_label = tk.Label(window, text=" Translations will appear here", wraplength=500, font=("Arial", 11), justify="left")
 translation_label.pack(pady=10)
 tk.Button(window, text="Quit", command=window.destroy, bg="gray", font=("Arial", 12)).pack(pady=20)
 window.mainloop()
