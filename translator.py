@@ -1,45 +1,26 @@
-import tkinter as tk
-import sounddevice as sd
-import numpy as np
-import asyncio
-import edge_tts
-from googletrans import Translator
-import tempfile
-import os
-import threading
-import datetime
-import scipy.io.wavfile
-from faster_whisper import WhisperModel
-import torch
-# load the whisper model
-model = WhisperModel("base", compute_type="int8")
-translator = Translator()
-RECORD_SECONDS = 5
-SAMPLERATE = 16000
-is_listening = False
-LOG_FILE = "transcripts.txt"
-#add languages want to translate
-MULTI_LANGS = [
-    ("Arabic", "ar", "ar-SA-ZariyahNeural"), ("Bengali", "bn", "bn-IN-TanishaaNeural"), ("Chinese (Simplified)", "zh-CN", "zh-CN-XiaoxiaoNeural"),("Chinese (Traditional)", "zh-TW", "zh-TW-HsiaoChenNeural"),
-    ("Czech", "cs", "cs-CZ-VlastaNeural"), ("Danish", "da", "da-DK-ChristelNeural"), ("Dutch", "nl", "nl-NL-ColetteNeural"), ("English (US)", "en", "en-US-JennyNeural"),
-    ("English (UK)", "en", "en-GB-MaisieNeural"), ("Estonian", "et", "et-EE-AnuNeural"), ("Finnish", "fi", "fi-FI-SelmaNeural"), ("French", "fr", "fr-FR-DeniseNeural"),
-    ("German", "de", "de-DE-KatjaNeural"), ("Greek", "el", "el-GR-AthinaNeural"),("Gujarati", "gu", "gu-IN-DhwaniNeural"), ("Hebrew", "he", "he-IL-HilaNeural"),("Hindi", "hi", "hi-IN-MadhurNeural"), ("Hungarian", "hu", "hu-HU-NoemiNeural"),
-    ("Indonesian", "id", "id-ID-GadisNeural"), ("Italian", "it", "it-IT-ElsaNeural"),("Japanese", "ja", "ja-JP-NanamiNeural"), ("Kannada", "kn", "kn-IN-SapnaNeural"),
-    ("Korean", "ko", "ko-KR-SunHiNeural"), ("Latvian", "lv", "lv-LV-EveritaNeural"), ("Lithuanian", "lt", "lt-LT-OnaNeural"), ("Malay", "ms", "ms-MY-YasminNeural"),
-    ("Malayalam", "ml", "ml-IN-SobhanaNeural"), ("Marathi", "mr", "mr-IN-AarohiNeural"), ("Norwegian", "no", "nb-NO-PernilleNeural"),("Polish", "pl", "pl-PL-ZofiaNeural"), ("Portuguese (Portugal)", "pt", "pt-PT-RaquelNeural"),
-    ("Portuguese (Brazil)", "pt", "pt-BR-FranciscaNeural"), ("Punjabi", "pa", "pa-IN-GagandeepNeural"), ("Romanian", "ro", "ro-RO-AlinaNeural"), ("Russian", "ru", "ru-RU-DariyaNeural"),
-    ("Slovak", "sk", "sk-SK-ViktoriaNeural"), ("Slovenian", "sl", "sl-SI-PetraNeural"), ("Spanish (Spain)", "es", "es-ES-ElviraNeural"), ("Spanish (Mexico)", "es", "es-MX-DaliaNeural"),
-    ("Swedish", "sv", "sv-SE-SofieNeural"), ("Tamil", "ta", "ta-IN-PallaviNeural"), ("Telugu", "te", "te-IN-ShrutiNeural"), ("Thai", "th", "th-TH-PremNeural"), ("Turkish", "tr", "tr-TR-EmelNeural"),
-    ("Ukrainian", "uk", "uk-UA-PolinaNeural"), ("Urdu", "ur", "ur-PK-AsadNeural"), ("Vietnamese", "vi", "vi-VN-HoaiMyNeural")]
 
-def record_audio():
-    audio = sd.rec(int(RECORD_SECONDS * SAMPLERATE), samplerate=SAMPLERATE, channels=1, dtype='int16')
-    sd.wait()
-    return audio
-def save_audio(audio):
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-    scipy.io.wavfile.write(tmp.name, SAMPLERATE, audio)
-    return tmp.name
+import tkinter as tk
+import threading
+import os
+import asyncio
+from flask import Flask, request
+from speech_logic import (
+    record_audio, save_audio, transcribe_and_detect, translate_text, speak_text, save_transcript, MULTI_LANGS
+)
+
+app = Flask(__name__)
+is_listening = False
+
+# --- Commented out duplicate logic functions (see speech_logic.py for active versions) ---
+# def record_audio():
+#     audio = sd.rec(int(RECORD_SECONDS * SAMPLERATE), samplerate=SAMPLERATE, channels=1, dtype='int16')
+#     sd.wait()
+#     return audio
+#
+# def save_audio(audio):
+#     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+#     scipy.io.wavfile.write(tmp.name, SAMPLERATE, audio)
+#     return tmp.name
 def transcribe_and_detect(path):
     segments, info = model.transcribe(path, beam_size=5)
     text = " ".join([segment.text for segment in segments])
@@ -96,20 +77,21 @@ def listen_loop():
             text, detected_lang = transcribe_and_detect(path)
             if not text or not detected_lang:
                 transcription_label.config(text="Error: No transcription or language detection.")
-                continue  # Skip the iteration if transcription failed
+                continue
             transcription_label.config(text=f" You said ({detected_lang}): {text}")
             if "stop" in text.lower():
                 is_listening = False
                 status_label.config(text=" Stopped.")
                 break
-            user_choice = selected_lang.get()
+            # Get selected language from Listbox
+            selection = lang_listbox.curselection()
+            user_choice = lang_listbox.get(selection[0]) if selection else "English (UK)"
             chosen = next((item for item in MULTI_LANGS if item[0] == user_choice), None)
             if chosen:
                 name, lang_code, voice = chosen
                 translated = translate_text(text, lang_code)
                 if translated:
                     translation_label.config(text=f" {name}: {translated}")
-                    # Call speak_text here to play the translated speech
                     asyncio.run(speak_text(translated, voice))
                     save_transcript(text, detected_lang, [(name, translated, voice)])
                 else:
@@ -120,12 +102,28 @@ def listen_loop():
             transcription_label.config(text=f"Error: {str(e)}")
         finally:
             os.remove(path)
+@app.route('/translate', methods=['POST'])
+def translate():
+    data = request.json
+    target_lang = data.get("target_language")
+
+    return {
+        "transcription": "Hello",
+        "translation": "Hola"
+    }
+    
+# UI event handlers
 def start_listening():
     threading.Thread(target=listen_loop, daemon=True).start()
+
 def stop_listening():
     global is_listening
     is_listening = False
     status_label.config(text=" Stopped by user.")
+tk.Label(window, text=" Speech-to-Speech Translation", font=("Arial", 13, "bold")).pack(pady=5)
+tk.Button(window, text="Start Listening", command=start_listening, bg="lightgreen", font=("Arial", 12)).pack(pady=10)
+tk.Button(window, text="Stop Listening", command=stop_listening, bg="salmon", font=("Arial", 12)).pack(pady=5)
+tk.Button(window, text="Quit", command=window.destroy, bg="gray", font=("Arial", 12)).pack(pady=20)
 # tkinter GUI setup for app window
 window = tk.Tk()
 window.title("Speech-to-Speech Translation APP")
